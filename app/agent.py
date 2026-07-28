@@ -154,7 +154,7 @@ primary_source_curator_agent = Agent(
         vertexai=True,
         project=PROJECT_ID,
         location=LOCATION,
-        retry_options=types.HttpRetryOptions(attempts=3),
+        retry_options=types.HttpRetryOptions(attempts=5),
     ),
     instruction=PRIMARY_SOURCE_CURATOR_INSTRUCTION,
     tools=[
@@ -170,7 +170,7 @@ socratic_tutor_agent = Agent(
         vertexai=True,
         project=PROJECT_ID,
         location=LOCATION,
-        retry_options=types.HttpRetryOptions(attempts=3),
+        retry_options=types.HttpRetryOptions(attempts=5),
     ),
     instruction=SOCRATIC_TUTOR_INSTRUCTION,
     tools=[
@@ -190,7 +190,7 @@ classifier_agent = Agent(
         vertexai=True,
         project=PROJECT_ID,
         location=LOCATION,
-        retry_options=types.HttpRetryOptions(attempts=3),
+        retry_options=types.HttpRetryOptions(attempts=5),
     ),
     instruction="Classify student intent: 'RESEARCH_QUERY' vs 'SOCRATIC_HELP' vs 'GENERAL'.",
 )
@@ -207,7 +207,7 @@ root_agent = Agent(
         vertexai=True,
         project=PROJECT_ID,
         location=LOCATION,
-        retry_options=types.HttpRetryOptions(attempts=3),
+        retry_options=types.HttpRetryOptions(attempts=5),
     ),
     instruction=SUPERVISOR_ROUTING_INSTRUCTION,
     sub_agents=[
