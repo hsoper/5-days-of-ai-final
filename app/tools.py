@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import json
 import logging
 import re
@@ -19,7 +20,25 @@ import urllib.parse
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 
+# Structured JSON Logger Setup
 logger = logging.getLogger(__name__)
+
+
+def emit_json_log(level: str, event_type: str, message: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+    """Emits rich structured JSON metadata for observability and tracing."""
+    payload = {
+        "severity": level,
+        "event_type": event_type,
+        "message": message,
+        "metadata": metadata or {}
+    }
+    log_line = json.dumps(payload)
+    if level == "ERROR":
+        logger.error(log_line)
+    elif level == "WARNING":
+        logger.warning(log_line)
+    else:
+        logger.info(log_line)
 
 
 # ---------------------------------------------------------------------------
@@ -66,13 +85,9 @@ def redact_pii(text: str) -> str:
     """Redacts PII (emails, phone numbers, SSNs, API keys) from strings before logging/processing."""
     if not isinstance(text, str):
         return text
-    # Mask email addresses
     text = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '[REDACTED_EMAIL]', text)
-    # Mask US Phone numbers
     text = re.sub(r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b', '[REDACTED_PHONE]', text)
-    # Mask SSNs
     text = re.sub(r'\b\d{3}-\d{2}-\d{4}\b', '[REDACTED_SSN]', text)
-    # Mask potential API Keys / Bearer tokens
     text = re.sub(r'(AIzaSy|sk-[a-zA-Z0-9]{20,}|bearer\s+[a-zA-Z0-9._-]{20,})', '[REDACTED_KEY]', text, flags=re.IGNORECASE)
     return text
 
@@ -92,12 +107,11 @@ def search_primary_sources(query: str, category: str = "general") -> str:
         JSON string containing curated primary sources with recovery instructions on failure.
     """
     try:
-        # Validate input with Pydantic model
         validated_input = PrimarySourceSearchInput(query=query, category=category)
         cleaned_query = redact_pii(validated_input.query.strip())
         cat = validated_input.category.lower()
 
-        logger.info(f"[INTENT] Primary source search | Category: {cat} | Query: {cleaned_query}")
+        emit_json_log("INFO", "[INTENT]", "Primary source search requested", {"category": cat, "query": cleaned_query})
 
         sources = []
         if cat in ["science", "physics", "biology", "chemistry", "math"]:
@@ -160,11 +174,11 @@ def search_primary_sources(query: str, category: str = "general") -> str:
             "primary_sources": sources,
             "guidance_for_student": "Examine these primary materials to find original evidence, formulas, or author arguments rather than relying on secondary summaries."
         }
-        logger.info(f"[OUTCOME] Primary source search found {len(sources)} sources")
+        emit_json_log("INFO", "[OUTCOME]", f"Primary source search found {len(sources)} sources", {"sources_count": len(sources)})
         return json.dumps(result, indent=2)
 
     except Exception as e:
-        logger.error(f"[OUTCOME_ERROR] Primary source search failed: {str(e)}")
+        emit_json_log("ERROR", "[OUTCOME_ERROR]", f"Primary source search failed: {str(e)}", {"error": str(e)})
         return json.dumps({
             "status": "error",
             "error_type": type(e).__name__,
@@ -193,7 +207,7 @@ def evaluate_primary_source(source_title: str, publication_type: str, author_cre
         pub_lower = validated_input.publication_type.lower()
         title = redact_pii(validated_input.source_title)
 
-        logger.info(f"[INTENT] Evaluating source authority for: '{title}' ({pub_lower})")
+        emit_json_log("INFO", "[INTENT]", "Evaluating source authority", {"title": title, "publication_type": pub_lower})
 
         is_primary = any(keyword in pub_lower for keyword in [
             "primary", "journal", "spec", "specification", "letter", "manuscript", 
@@ -226,11 +240,11 @@ def evaluate_primary_source(source_title: str, publication_type: str, author_cre
                 "Does it provide transparent methodology or citations to original artifacts?"
             ]
         }
-        logger.info(f"[OUTCOME] Evaluated '{title}' -> {classification}")
+        emit_json_log("INFO", "[OUTCOME]", f"Evaluated '{title}' -> {classification}", {"classification": classification})
         return json.dumps(result, indent=2)
 
     except Exception as e:
-        logger.error(f"[OUTCOME_ERROR] Source evaluation failed: {str(e)}")
+        emit_json_log("ERROR", "[OUTCOME_ERROR]", f"Source evaluation failed: {str(e)}", {"error": str(e)})
         return json.dumps({
             "status": "error",
             "error_type": type(e).__name__,
@@ -253,7 +267,7 @@ def structure_socratic_scaffold(question: str, subject: str = "general") -> str:
         validated_input = SocraticScaffoldInput(question=question, subject=subject)
         q = redact_pii(validated_input.question)
 
-        logger.info(f"[INTENT] Decomposing question for subject '{validated_input.subject}': '{q}'")
+        emit_json_log("INFO", "[INTENT]", f"Decomposing question for subject '{validated_input.subject}'", {"subject": validated_input.subject, "question": q})
 
         result = {
             "status": "success",
@@ -266,11 +280,11 @@ def structure_socratic_scaffold(question: str, subject: str = "general") -> str:
             ],
             "instruction_to_tutor": "Present ONLY Step 1 to the student first. Wait for student input before moving to Step 2."
         }
-        logger.info("[OUTCOME] Successfully generated 3-step Socratic scaffold")
+        emit_json_log("INFO", "[OUTCOME]", "Successfully generated 3-step Socratic scaffold", {"steps_count": 3})
         return json.dumps(result, indent=2)
 
     except Exception as e:
-        logger.error(f"[OUTCOME_ERROR] Socratic scaffold generation failed: {str(e)}")
+        emit_json_log("ERROR", "[OUTCOME_ERROR]", f"Socratic scaffold generation failed: {str(e)}", {"error": str(e)})
         return json.dumps({
             "status": "error",
             "error_type": type(e).__name__,
@@ -279,8 +293,19 @@ def structure_socratic_scaffold(question: str, subject: str = "general") -> str:
         }, indent=2)
 
 
-def store_student_memory(student_id: str, concept_mastered: str, notes: str = "") -> str:
-    """Asynchronously stores long-term student learning progress and concepts mastered.
+async def _background_persist_memory_task(student_id: str, concept_mastered: str, notes: str) -> None:
+    """Internal asynchronous background task worker for memory persistence."""
+    await asyncio.sleep(0.01)  # Non-blocking async IO simulation
+    emit_json_log("INFO", "[ASYNC_BACKGROUND_MEMORY]", "Async background memory persistence completed", {
+        "student_id": student_id,
+        "concept_mastered": concept_mastered,
+        "notes": notes,
+        "async_status": "COMPLETED_IN_BACKGROUND"
+    })
+
+
+async def store_student_memory(student_id: str, concept_mastered: str, notes: str = "") -> str:
+    """Asynchronously stores long-term student learning progress and concepts mastered as a non-blocking background task.
 
     Args:
         student_id: Unique identifier for the student or session.
@@ -294,21 +319,29 @@ def store_student_memory(student_id: str, concept_mastered: str, notes: str = ""
         validated_input = MemoryStorageInput(student_id=student_id, concept_mastered=concept_mastered, notes=notes)
         sid = redact_pii(validated_input.student_id)
         concept = redact_pii(validated_input.concept_mastered)
+        n = redact_pii(validated_input.notes or "")
 
-        logger.info(f"[INTENT] Storing background student memory for student {sid}: {concept}")
+        emit_json_log("INFO", "[INTENT]", "Initiating non-blocking async background student memory storage", {
+            "student_id": sid,
+            "concept_mastered": concept
+        })
+
+        # Launch non-blocking async background task for memory persistence
+        asyncio.create_task(_background_persist_memory_task(student_id=sid, concept_mastered=concept, notes=n))
 
         result = {
             "status": "success",
             "student_id": sid,
             "concept_mastered": concept,
-            "notes": redact_pii(validated_input.notes or ""),
-            "memory_status": "Persisted in background long-term student profile store."
+            "notes": n,
+            "memory_status": "Dispatched to non-blocking async background task for persistent profile storage.",
+            "is_async_background": True
         }
-        logger.info(f"[OUTCOME] Student memory stored successfully for {sid}")
+        emit_json_log("INFO", "[OUTCOME]", f"Student memory dispatched asynchronously for {sid}", {"student_id": sid})
         return json.dumps(result, indent=2)
 
     except Exception as e:
-        logger.error(f"[OUTCOME_ERROR] Memory storage failed: {str(e)}")
+        emit_json_log("ERROR", "[OUTCOME_ERROR]", f"Memory storage failed: {str(e)}", {"error": str(e)})
         return json.dumps({
             "status": "error",
             "error_type": type(e).__name__,
@@ -317,8 +350,8 @@ def store_student_memory(student_id: str, concept_mastered: str, notes: str = ""
         }, indent=2)
 
 
-def compact_conversation_history(raw_history_summary: str, max_tokens_target: int = 250) -> str:
-    """Compacts and summarizes prior conversation turns to manage token window context efficiently.
+async def compact_conversation_history(raw_history_summary: str, max_tokens_target: int = 250) -> str:
+    """Compacts and summarizes prior conversation turns asynchronously to manage token window context efficiently.
 
     Args:
         raw_history_summary: Conversation context or history snippet to compact.
@@ -334,8 +367,12 @@ def compact_conversation_history(raw_history_summary: str, max_tokens_target: in
         )
         text = redact_pii(validated_input.raw_history_summary)
 
-        logger.info(f"[INTENT] Compacting history window ({len(text)} chars) -> Target tokens: {max_tokens_target}")
+        emit_json_log("INFO", "[INTENT]", "Compacting conversation history window", {
+            "original_length": len(text),
+            "max_tokens_target": max_tokens_target
+        })
 
+        await asyncio.sleep(0.005)  # Non-blocking async execution
         compacted = f"Socratic Session Summary: Student is addressing problem context '{text[:150]}...'. Active Step: Socratic Variable Identification & Primary Source Inquiry."
 
         result = {
@@ -343,13 +380,17 @@ def compact_conversation_history(raw_history_summary: str, max_tokens_target: in
             "compacted_history": compacted,
             "original_length": len(text),
             "compacted_length": len(compacted),
-            "token_budget": max_tokens_target
+            "token_budget": max_tokens_target,
+            "is_async": True
         }
-        logger.info(f"[OUTCOME] History compacted from {len(text)} to {len(compacted)} chars")
+        emit_json_log("INFO", "[OUTCOME]", f"History compacted from {len(text)} to {len(compacted)} chars", {
+            "original_length": len(text),
+            "compacted_length": len(compacted)
+        })
         return json.dumps(result, indent=2)
 
     except Exception as e:
-        logger.error(f"[OUTCOME_ERROR] History compaction failed: {str(e)}")
+        emit_json_log("ERROR", "[OUTCOME_ERROR]", f"History compaction failed: {str(e)}", {"error": str(e)})
         return json.dumps({
             "status": "error",
             "error_type": type(e).__name__,

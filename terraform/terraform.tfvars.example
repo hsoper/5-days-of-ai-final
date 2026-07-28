@@ -1,0 +1,6 @@
+# Example Terraform Variable Configuration for Socrates AI Agent
+project_id             = "onboarding-project-fde"
+region                 = "us-central1"
+app_name               = "socrates-ai-agent"
+container_image        = "gcr.io/onboarding-project-fde/socrates-ai-agent:latest"
+allow_unauthenticated = true
