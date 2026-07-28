@@ -131,32 +131,6 @@ agents-cli eval run
 
 ---
 
-## 🎬 5-Minute YouTube Video Pitch Script (Capstone Rubric Requirement)
-
-*This script follows the exact 5-minute video submission requirement specified in the Capstone Rubric.*
-
-### [0:00 - 1:00] Problem & Vision
-- **Visual**: Presenter on camera + slide showing traditional AI returning direct homework code/answers vs Socrates AI logo.
-- **Script**: *"Hello judges and fellow AI builders! Today, millions of students use AI as a shortcut to get instant answers. But when AI does the homework, students lose out on critical thinking and problem-solving skills. Presenting **Socrates AI** — an education agent built on the Google Agent Development Kit (ADK) that acts as a true Socratic mentor. It never gives away the answer, waits for human input at each step, and pushes students to discover facts through primary sources!"*
-
-### [1:00 - 2:30] Live Interactive Demo
-- **Visual**: Screen capture running `agents-cli run` and `agents-cli playground`.
-- **Script**: *"Let's see Socrates AI in action. I'm going to ask it to solve a physics homework problem: 'A 10kg mass accelerates at 5m/s^2. What is the force?' Notice how Socrates AI immediately calls `structure_socratic_scaffold`. Instead of giving $50\text{ N}$, it greets the student, refuses the direct answer, and asks them to identify the given variables first! When I reply with the variables and ask where to find Newton's original formulation, Socrates AI invokes `search_primary_sources` and points us directly to Newton's 1687 *Principia Mathematica*."*
-
-### [2:30 - 3:45] Technical Architecture & ADK Implementation
-- **Visual**: Architecture Diagram (Mermaid diagram above) highlighting Gemini 3.6 Flash + ADK Tools.
-- **Script**: *"Under the hood, Socrates AI is built natively with Google ADK (`google.adk`). We leverage Gemini 3.6 Flash for fast, reasoning-rich turn-taking. Our custom tool suite includes `search_primary_sources` which queries ArXiv, Google Scholar, Python Docs, and historical archives, alongside `evaluate_primary_source` to teach students source credibility."*
-
-### [3:45 - 4:30] Evaluation & Results
-- **Visual**: Terminal output running `agents-cli eval run` showing **5.00 / 5.00** mean score across all 5 test cases.
-- **Script**: *"To guarantee strict adherence to Socratic rules, we built a comprehensive evaluation suite with `agents-cli eval`. Our LLM-as-judge evaluator checks every response for zero direct answers, step-by-step Socratic guidance, and primary source engagement. Socrates AI achieved a perfect **5.00 / 5.00** score across physics, computer science, history, philosophy, and direct-answer refusal stress tests!"*
-
-### [4:30 - 5:00] Conclusion & Impact
-- **Visual**: Socrates AI github repo link and call to action.
-- **Script**: *"Socrates AI transforms generative AI from a passive answer generator into an empowering, primary-source educational mentor. All code and evaluation benchmarks are available in our public GitHub repository. Thank you Google & Kaggle for an incredible 5 Days of AI!"*
-
----
-
 ## 📜 License
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
