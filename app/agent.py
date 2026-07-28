@@ -45,8 +45,8 @@ DEEP_REASONING_MODEL = "gemini-2.5-pro"         # Non-flash pro reasoning model 
 
 
 # Determine Vertex AI project and location for Google ADK
-PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT") or os.environ.get("DEVSHELL_PROJECT_ID") or "onboarding-project-fde"
-LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION") or "us-central1"
+PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT") or os.environ.get("DEVSHELL_PROJECT_ID")
+LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
 
 
 # ---------------------------------------------------------------------------

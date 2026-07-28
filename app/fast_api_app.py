@@ -35,7 +35,7 @@ try:
     logger = logging_client.logger(__name__)
 except Exception:
     import logging
-    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "onboarding-project-fde")
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
     logger = logging.getLogger(__name__)
 allow_origins = (
     os.getenv("ALLOW_ORIGINS", "").split(",") if os.getenv("ALLOW_ORIGINS") else None
