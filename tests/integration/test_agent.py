@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "1"
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "onboarding-project-fde")
+os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
+
 from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService

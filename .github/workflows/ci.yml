@@ -15,6 +15,12 @@ jobs:
       - name: Checkout Code Repository
         uses: actions/checkout@v4
 
+      - name: Authenticate to Google Cloud (if secrets provided)
+        uses: google-github-actions/auth@v2
+        if: ${{ secrets.GCP_SA_KEY != '' }}
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -35,6 +41,9 @@ jobs:
           uv sync --all-extras --dev
 
       - name: Run Unit and Integration Tests
+        env:
+          GOOGLE_CLOUD_PROJECT: "onboarding-project-fde"
+          GOOGLE_CLOUD_LOCATION: "us-central1"
         run: |
           uv run pytest tests/unit tests/integration
 

@@ -69,6 +69,9 @@ def start_server() -> subprocess.Popen[str]:
     ]
     env = os.environ.copy()
     env["INTEGRATION_TEST"] = "TRUE"
+    env["GOOGLE_GENAI_USE_VERTEXAI"] = "1"
+    env.setdefault("GOOGLE_CLOUD_PROJECT", "onboarding-project-fde")
+    env.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
