@@ -17,7 +17,9 @@ jobs:
 
       - name: Authenticate to Google Cloud (if secrets provided)
         uses: google-github-actions/auth@v2
-        if: ${{ secrets.GCP_SA_KEY != '' }}
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        if: ${{ env.GCP_SA_KEY != '' }}
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
@@ -42,6 +44,7 @@ jobs:
 
       - name: Run Unit and Integration Tests
         env:
+          GOOGLE_GENAI_USE_VERTEXAI: "1"
           GOOGLE_CLOUD_PROJECT: "onboarding-project-fde"
           GOOGLE_CLOUD_LOCATION: "us-central1"
         run: |
