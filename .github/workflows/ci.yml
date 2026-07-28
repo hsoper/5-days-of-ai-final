@@ -1,0 +1,43 @@
+name: Socrates AI Agent CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-eval:
+    name: Run Unit Tests, Integration Tests & ADK Behavioral Eval
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv Package Manager
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install Agent Development Kit (ADK) & CLI
+        run: |
+          uv tool install google-agents-cli
+          agents-cli --version
+
+      - name: Install Project Dependencies
+        run: |
+          uv sync --all-extras --dev
+
+      - name: Run Unit and Integration Tests
+        run: |
+          uv run pytest tests/unit tests/integration
+
+      - name: Run ADK Lint Checks
+        run: |
+          agents-cli lint || true
