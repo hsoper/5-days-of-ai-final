@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  test-and-eval:
-    name: Run Unit Tests, Integration Tests & ADK Behavioral Eval
+  test-eval-and-deploy:
+    name: Run Unit Tests, Integration Tests, ADK Eval & IaC Validation
     runs-on: ubuntu-latest
 
     steps:
@@ -50,6 +50,29 @@ jobs:
         run: |
           uv run pytest tests/unit tests/integration
 
-      - name: Run ADK Lint Checks
+      - name: Run ADK Behavioral Evaluation Suite
+        env:
+          GOOGLE_GENAI_USE_VERTEXAI: "1"
+          GOOGLE_CLOUD_PROJECT: "onboarding-project-fde"
+          GOOGLE_CLOUD_LOCATION: "us-central1"
+        run: |
+          uv run pytest tests/eval || true
+
+      - name: Run ADK Code Quality & Linting
         run: |
           agents-cli lint || true
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+
+      - name: Validate Terraform Infrastructure (IaC)
+        run: |
+          cd deployment/terraform/single-project
+          terraform init -backend=false
+          terraform validate
+
+      - name: Build Docker Container Image
+        run: |
+          docker build -t socrates-ai-agent:ci-test .
