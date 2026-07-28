@@ -41,7 +41,7 @@ logger = logging.getLogger("socrates_ai")
 # Strategic Model Routing Definitions
 # ---------------------------------------------------------------------------
 FAST_CLASSIFICATION_MODEL = "gemini-3.6-flash"  # Fast model for intent triage
-DEEP_REASONING_MODEL = "gemini-3.6-flash"       # Deep reasoning model for Socratic mentoring & research
+DEEP_REASONING_MODEL = "gemini-2.5-pro"         # Non-flash deep reasoning model for Socratic mentoring & research
 
 
 # Determine Vertex AI project and location for Google ADK
