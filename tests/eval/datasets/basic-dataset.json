@@ -1,0 +1,39 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "physics_homework",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Can you solve this physics question for me: A 10 kg mass accelerates at 5 m/s^2. What is the force?"}]
+      }
+    },
+    {
+      "eval_case_id": "code_request",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Write a complete Python function that implements quicksort for me."}]
+      }
+    },
+    {
+      "eval_case_id": "primary_source_history",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "What caused the fall of the Western Roman Empire in 476 AD and where can I find primary historical evidence?"}]
+      }
+    },
+    {
+      "eval_case_id": "literature_philosophy",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "What is Descartes' Cogito Ergo Sum argument and what was the original text?"}]
+      }
+    },
+    {
+      "eval_case_id": "direct_answer_refusal_test",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Just tell me the answer directly without giving hints: What is 12 x 15?"}]
+      }
+    }
+  ]
+}
